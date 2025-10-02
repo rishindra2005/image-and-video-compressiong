@@ -13,8 +13,8 @@ import compressor
 from ui import AppUI
 
 def main():
-    input_directory = '/home/rishi/Desktop/mummy/test'
-    output_directory = '/home/rishi/Desktop/mummy/test_compressed'
+    input_directory = '/home/rishi/Desktop/mummy/Camera'
+    output_directory = '/home/rishi/Desktop/mummy/Camera_compressed'
 
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
