@@ -26,6 +26,19 @@ def _parse_fps(s: str) -> float | None:
     except Exception:
         return None
 
+def get_video_rotate_tag(path: str) -> str | None:
+    """Return the 'rotate' tag value from the first video stream if present (e.g., '90', '180')."""
+    try:
+        out = subprocess.check_output([
+            'ffprobe', '-v', 'error', '-select_streams', 'v:0',
+            '-show_entries', 'stream_tags=rotate', '-of', 'default=nw=1:nk=1', path
+        ], text=True).strip()
+        if out and out.upper() != 'N/A':
+            return out
+    except Exception:
+        pass
+    return None
+
 def get_media_duration_seconds(path: str) -> float | None:
     # 1) Try container (format) duration
     try:
@@ -184,6 +197,7 @@ def compress_file(input_path, output_path, *, progress_cb=None, duration_s: floa
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
     if ext in VIDEO_EXTS:
+        rotate_tag = get_video_rotate_tag(input_path)
         # Try 1: NVENC with CUDA hwaccel (device decode + encode)
         base1 = [
             '-hwaccel', 'cuda',
@@ -195,6 +209,9 @@ def compress_file(input_path, output_path, *, progress_cb=None, duration_s: floa
             '-rc', 'vbr',
             '-cq', '34',  # increase compression (higher CQ -> smaller size)
             '-c:a', 'copy',
+            # Preserve metadata and orientation tags; optimize MP4 for playback
+            '-map_metadata', '0', '-movflags', 'use_metadata_tags+faststart',
+            *( ['-metadata:s:v:0', f'rotate={rotate_tag}'] if rotate_tag else [] ),
             output_path
         ]
         if progress_cb is not None:
@@ -217,6 +234,8 @@ def compress_file(input_path, output_path, *, progress_cb=None, duration_s: floa
             '-rc', 'vbr',
             '-cq', '34',
             '-c:a', 'copy',
+            '-map_metadata', '0', '-movflags', 'use_metadata_tags+faststart',
+            *( ['-metadata:s:v:0', f'rotate={rotate_tag}'] if rotate_tag else [] ),
             output_path
         ]
         if progress_cb is not None:
@@ -236,6 +255,8 @@ def compress_file(input_path, output_path, *, progress_cb=None, duration_s: floa
             '-r', '24',
             '-c:v', 'libx264', '-preset', 'medium', '-crf', '28',
             '-c:a', 'aac', '-b:a', '128k',
+            '-map_metadata', '0', '-movflags', 'use_metadata_tags+faststart',
+            *( ['-metadata:s:v:0', f'rotate={rotate_tag}'] if rotate_tag else [] ),
             output_path
         ]
         if progress_cb is not None:

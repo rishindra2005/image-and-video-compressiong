@@ -258,16 +258,18 @@ def main():
                 title="[bold green]Complete[/bold green]",
             )
         )
-        # Stay in the Live context until user exits (use Console.input for Live compatibility)
-        try:
-            while True:
-                resp = console.input("")
-                if resp.strip().lower() == 'x':
-                    break
-        finally:
-            # Stop background updates on exit
-            stop_event.set()
-            stats_thread.join()
+        # Stop background updates before waiting for user input
+        stop_event.set()
+        stats_thread.join()
+
+        # Read input within Live context so the UI remains visible
+        while True:
+            try:
+                resp = console.input("Press 'x' and Enter to close: ")
+            except KeyboardInterrupt:
+                resp = 'x'
+            if (resp or '').strip().lower() == 'x':
+                break
 
     stats.shutdown_nvml()
 
