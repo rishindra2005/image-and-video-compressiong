@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+*.egg
+*.egg-info/
+.eggs/
+.build/
+build/
+dist/
+*.manifest
+*.spec
+
+# Virtual environments
+venv/
+!venv/.gitkeep
+.env/
+.venv/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Project data directories
+Cemera/
+!Cemera/.gitkeep
+Camera/
+!Camera/.gitkeep
+test/
+!test/.gitkeep
+test_compressed/
+!test_compressed/.gitkeep
+Camera_compressed/
+!Camera_compressed/.gitkeep
+test,cmpressed/
+!test,cmpressed/.gitkeep
+
+# Logs / misc
+*.log
+*.tmp
