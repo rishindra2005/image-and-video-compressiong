@@ -2,6 +2,7 @@
 import subprocess
 import os
 import time
+import shutil
 
 VIDEO_EXTS = {'.mp4', '.mov', '.mkv', '.avi', '.webm'}
 IMAGE_EXTS = {'.jpg', '.jpeg', '.png'}
@@ -268,8 +269,12 @@ def compress_file(input_path, output_path, *, progress_cb=None, duration_s: floa
         if ok3:
             return {'type': 'video-cpu', 'duration_sec': dur3, 'error': None, 'error_log': ''}
 
-        # All attempts failed
+        # All attempts failed: copy original to output and log error
         combined_err = "\n".join([msg for msg in [err, err2, err3] if msg])
+        try:
+            shutil.copy2(input_path, output_path)
+        except Exception as ce:
+            combined_err = (combined_err + f"\ncopy2 failed: {ce}").strip()
         return {'type': 'video-failed', 'duration_sec': 0.0, 'error': 'ffmpeg_failed', 'error_log': combined_err}
     elif ext in IMAGE_EXTS:
         # Try GPU JPEG encoder first
@@ -295,6 +300,11 @@ def compress_file(input_path, output_path, *, progress_cb=None, duration_s: floa
         ok2, dur2, err2 = _run_ffmpeg(cpu_cmd)
         if ok2:
             return {'type': 'image-cpu', 'duration_sec': dur2, 'error': None, 'error_log': ''}
+        # All attempts failed: copy original to output and log error
+        try:
+            shutil.copy2(input_path, output_path)
+        except Exception as ce:
+            err2 = (err2 + f"\ncopy2 failed: {ce}").strip()
         return {'type': 'image-failed', 'duration_sec': 0.0, 'error': 'ffmpeg_failed', 'error_log': err2}
     else:
         # Unsupported type; skip
